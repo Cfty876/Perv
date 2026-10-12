@@ -3,6 +3,8 @@ import { SLIDES_DATA } from './data/slidesData';
 import { SlideRenderer } from './components/viewer/SlideRenderer';
 import { ContactModal } from './components/modals/ContactModal';
 import { InteractiveHub } from './components/interactives/InteractiveHub';
+import { PortfolioSection } from './components/portfolio/PortfolioSection';
+import { SplashScreen } from './components/common/SplashScreen';
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -12,12 +14,16 @@ import {
   Phone,
   Presentation,
   Gamepad2,
-  Sparkles
+  Award,
+  Download
 } from 'lucide-react';
 
 export default function App() {
-  // Main section: presentation slides or interactives hub
-  const [activeMainSection, setActiveMainSection] = useState<'slides' | 'interactive'>('slides');
+  // Initial loading splash screen using official «Ученик Года» logo
+  const [showSplash, setShowSplash] = useState<boolean>(true);
+
+  // Main section: presentation slides, portfolio & volunteer book, or interactives hub
+  const [activeMainSection, setActiveMainSection] = useState<'slides' | 'portfolio' | 'interactive'>('slides');
 
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isThumbnailsOpen, setIsThumbnailsOpen] = useState<boolean>(false);
@@ -35,17 +41,26 @@ export default function App() {
   const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
   const slideContainerRef = useRef<HTMLDivElement | null>(null);
 
-  // Preload all 6 slides in memory for instantaneous transitions
+  // Preload all 6 slides and SVG logos in memory for instantaneous transitions
   useEffect(() => {
     [1, 2, 3, 4, 5, 6].forEach((num) => {
       const img = new Image();
       img.src = `/slide-${num}.webp`;
+    });
+    ['/Первые.svg', '/года.svg', '/ученик-года.svg'].forEach((url) => {
+      const img = new Image();
+      img.src = url;
     });
   }, []);
 
   // Sync hash and handle hash change
   useEffect(() => {
     const handleHash = () => {
+      if (window.location.hash === '#portfolio' || window.location.hash === '#volunteer') {
+        setActiveMainSection('portfolio');
+        return;
+      }
+
       if (window.location.hash === '#interactives') {
         setActiveMainSection('interactive');
         return;
@@ -121,7 +136,6 @@ export default function App() {
   // Touch Swipe & Pinch Handlers for mobile
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
-      // Pinch gesture start
       const dist = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
@@ -148,7 +162,6 @@ export default function App() {
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
-    // Pinch to zoom
     if (e.touches.length === 2 && initialPinchDistRef.current) {
       const currentDist = Math.hypot(
         e.touches[0].clientX - e.touches[1].clientX,
@@ -163,7 +176,6 @@ export default function App() {
       return;
     }
 
-    // Pan image when zoomed
     if (zoomLevel > 1 && isPanning && e.touches.length === 1) {
       const newX = e.touches[0].clientX - panStartRef.current.x;
       const newY = e.touches[0].clientY - panStartRef.current.y;
@@ -175,7 +187,7 @@ export default function App() {
     setIsPanning(false);
     initialPinchDistRef.current = null;
 
-    if (zoomLevel > 1) return; // Do not swipe slide if user is zoomed in
+    if (zoomLevel > 1) return;
 
     if (!touchStartRef.current) return;
     const touchEnd = e.changedTouches[0];
@@ -183,7 +195,6 @@ export default function App() {
     const diffY = touchEnd.clientY - touchStartRef.current.y;
     const elapsed = Date.now() - touchStartRef.current.time;
 
-    // Detect horizontal swipe if horizontal movement is dominant and > 40px
     if (Math.abs(diffX) > 40 && Math.abs(diffX) > Math.abs(diffY) * 1.5 && elapsed < 500) {
       if (diffX < 0) {
         nextPage();
@@ -194,7 +205,6 @@ export default function App() {
     touchStartRef.current = null;
   };
 
-  // Double tap to zoom in/out on mobile (natural, button-free)
   const lastTapRef = useRef<number>(0);
   const handleDoubleTap = () => {
     const now = Date.now();
@@ -209,8 +219,21 @@ export default function App() {
     lastTapRef.current = now;
   };
 
-  // Native Mobile Share
   const handleShare = async () => {
+    if (activeMainSection === 'portfolio') {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: 'Портфолио и волонтёрская книжка Александра Ильина',
+            text: 'Всероссийский конкурс «Ученик года» — 299.5 верифицированных часов, проекты Движения Первых и IT-разработки.',
+            url: `${window.location.origin}#portfolio`,
+          });
+          return;
+        } catch (err) {}
+      }
+      return;
+    }
+
     if (activeMainSection === 'interactive') {
       if (navigator.share) {
         try {
@@ -239,7 +262,6 @@ export default function App() {
       } catch (err) {}
     }
 
-    // Direct download trigger fallback
     const link = document.createElement('a');
     link.href = `/slide-${slideNumber}.webp`;
     link.download = `Саша-Ильин-Слайд-${slideNumber}.webp`;
@@ -251,29 +273,50 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#0e0e10] text-neutral-100 flex flex-col justify-between select-none relative font-sans overflow-x-hidden">
       
-      {/* Top Header: Clean, Minimalist, with the ONE official logo of Движение Первых */}
-      <header className="sticky top-0 z-40 w-full px-3 sm:px-4 py-2 bg-[#121214]/90 backdrop-blur-md border-b border-neutral-800/80 flex items-center justify-between">
+      {/* Initial Loading Splash Screen with official «Ученик Года» logo */}
+      {showSplash && (
+        <SplashScreen onFinish={() => setShowSplash(false)} />
+      )}
+
+      {/* Top Header: Official Logos of Движение Первых and Ученик Года */}
+      <header className="sticky top-0 z-40 w-full px-2.5 sm:px-4 py-2 bg-[#121214]/90 backdrop-blur-md border-b border-neutral-800/80 flex items-center justify-between">
         
-        {/* Left: Official Движение Первых Logo & Segmented Switcher */}
-        <div className="flex items-center gap-2.5 sm:gap-3">
-          {/* Exactly ONE official logo of Движение Первых on the main site */}
-          <div className="flex items-center gap-1.5 shrink-0" title="Движение Первых">
-            <img 
-              src="/Первые.svg" 
-              alt="Движение Первых" 
-              className="h-7 sm:h-8 w-auto object-contain shrink-0 drop-shadow-xs" 
-            />
+        {/* Left: Official Logos (Первые.svg and года.svg) & Section Switcher */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5 overflow-x-auto scrollbar-none py-0.5">
+          
+          {/* Logo Container */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {/* 1. Official logo of Движение Первых */}
+            <div className="flex items-center justify-center shrink-0" title="Движение Первых">
+              <img 
+                src="/Первые.svg" 
+                alt="Движение Первых" 
+                className="h-8.5 sm:h-10 w-auto object-contain shrink-0 drop-shadow-xs" 
+              />
+            </div>
+
+            {/* 2. Official logo of the contest «Ученик года» (года.svg) in orange without substrate */}
+            <div 
+              className="flex items-center justify-center shrink-0" 
+              title="Всероссийский конкурс «Ученик года»"
+            >
+              <img 
+                src="/года.svg" 
+                alt="Ученик года" 
+                className="h-8.5 sm:h-10 w-auto object-contain drop-shadow-xs" 
+              />
+            </div>
           </div>
 
-          {/* Section Switcher: Слайды / Интерактивы */}
-          <div className="flex items-center gap-1 p-0.5 rounded-xl bg-neutral-900 border border-neutral-800">
+          {/* Section Switcher: Слайды / Достижения / Интерактивы */}
+          <div className="flex items-center gap-1 p-0.5 rounded-xl bg-neutral-900 border border-neutral-800 shrink-0">
             <button
               type="button"
               onClick={() => {
                 setActiveMainSection('slides');
                 window.location.hash = `page-${currentPage}`;
               }}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 sm:gap-1.5 ${
                 activeMainSection === 'slides'
                   ? 'bg-neutral-800 text-white shadow-xs'
                   : 'text-neutral-400 hover:text-white'
@@ -286,10 +329,27 @@ export default function App() {
             <button
               type="button"
               onClick={() => {
+                setActiveMainSection('portfolio');
+                window.location.hash = 'portfolio';
+              }}
+              className={`px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 sm:gap-1.5 ${
+                activeMainSection === 'portfolio'
+                  ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-xs'
+                  : 'text-neutral-400 hover:text-white'
+              }`}
+            >
+              <Award className="w-3.5 h-3.5 text-amber-300" />
+              <span>Достижения</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
                 setActiveMainSection('interactive');
                 window.location.hash = 'interactives';
               }}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 relative ${
+              className={`px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 sm:gap-1.5 relative ${
                 activeMainSection === 'interactive'
                   ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-xs'
                   : 'text-neutral-400 hover:text-white'
@@ -297,22 +357,21 @@ export default function App() {
             >
               <Gamepad2 className="w-3.5 h-3.5" />
               <span>Интерактивы</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
             </button>
           </div>
         </div>
 
-        {/* Right: Clean Actions (Визитка & Поделиться) */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        {/* Right: Actions (Визитка & Поделиться) */}
+        <div className="flex items-center gap-1.5 shrink-0 pl-1">
           {/* Contact Business Card Button */}
           <button
             type="button"
             onClick={() => setIsContactOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-xs font-bold active:scale-95 transition-all shadow-sm shadow-orange-950/40 min-h-[34px]"
+            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-xs font-bold active:scale-95 transition-all shadow-sm shadow-orange-950/40 min-h-[34px]"
             title="Контакты и визитка Александра"
           >
             <Phone className="w-3.5 h-3.5" />
-            <span>Визитка</span>
+            <span className="hidden sm:inline">Визитка</span>
           </button>
 
           {/* Share Button */}
@@ -327,9 +386,14 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Presentation / Interactive View */}
+      {/* Main Presentation / Portfolio / Interactive View */}
       <main className="flex-1 w-full flex flex-col items-center justify-center p-2 sm:p-4 pb-20 md:pb-24">
-        {activeMainSection === 'interactive' ? (
+        {activeMainSection === 'portfolio' ? (
+          /* Portfolio & Volunteer Book (Mobile Optimized) */
+          <div className="w-full max-w-5xl py-2 animate-fade-in">
+            <PortfolioSection onOpenContacts={() => setIsContactOpen(true)} />
+          </div>
+        ) : activeMainSection === 'interactive' ? (
           /* Interactive Hub (City Quiz, Chatbot, Career Game) */
           <div className="w-full max-w-4xl py-2 animate-fade-in">
             <InteractiveHub onOpenContacts={() => setIsContactOpen(true)} />
@@ -347,7 +411,6 @@ export default function App() {
               onClick={handleDoubleTap}
               className="relative w-full aspect-[16/9] rounded-2xl shadow-2xl overflow-hidden bg-black border border-neutral-800/90 touch-none flex items-center justify-center cursor-grab active:cursor-grabbing"
             >
-              {/* Animated Slide Image with Transform Support for Natural Zoom and Pan */}
               <div 
                 className="w-full h-full transition-transform duration-150 ease-out origin-center flex items-center justify-center will-change-transform"
                 style={{
@@ -357,7 +420,6 @@ export default function App() {
                 <SlideRenderer slideId={currentPage} isPriority={true} />
               </div>
 
-              {/* Minimalist Zoom Badge (only appears when zoomed) */}
               {zoomLevel > 1 && (
                 <button
                   type="button"
@@ -370,7 +432,6 @@ export default function App() {
                 </button>
               )}
 
-              {/* Side Touch Navigation Arrows (Subtle, sleek) */}
               {currentPage > 1 && zoomLevel === 1 && (
                 <button
                   type="button"
@@ -415,12 +476,11 @@ export default function App() {
         )}
       </main>
 
-      {/* Minimalist Floating Bottom Dock (In natural thumb zone on mobile) */}
+      {/* Minimalist Floating Bottom Dock for Slides Mode */}
       {activeMainSection === 'slides' && (
         <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-40 max-w-xs w-[calc(100%-2rem)] flex items-center justify-center">
           <div className="w-full bg-[#161618]/90 backdrop-blur-xl border border-neutral-700/60 rounded-2xl px-2 py-1.5 shadow-2xl flex items-center justify-between">
             
-            {/* Left: Previous Slide */}
             <button
               type="button"
               onClick={prevPage}
@@ -431,7 +491,6 @@ export default function App() {
               <ChevronLeft className="w-5 h-5 text-neutral-200" />
             </button>
 
-            {/* Center: Slide indicator (Tap opens thumbnail sheet) */}
             <button
               type="button"
               onClick={() => setIsThumbnailsOpen(true)}
@@ -442,7 +501,6 @@ export default function App() {
               <span className="font-mono text-xs">{currentPage} / {SLIDES_DATA.length}</span>
             </button>
 
-            {/* Right: Next Slide */}
             <button
               type="button"
               onClick={nextPage}
@@ -454,6 +512,38 @@ export default function App() {
             </button>
 
           </div>
+        </div>
+      )}
+
+      {/* Floating Bottom Quick Bar for Portfolio Mode (Mobile Optimized) */}
+      {activeMainSection === 'portfolio' && (
+        <div className="fixed bottom-3 left-1/2 -translate-x-1/2 z-40 max-w-md w-[calc(100%-1.5rem)] flex items-center justify-between bg-[#161618]/95 backdrop-blur-xl border border-neutral-700/70 rounded-2xl p-1.5 shadow-2xl">
+          <button
+            type="button"
+            onClick={() => setActiveMainSection('slides')}
+            className="px-3 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-200 hover:text-white text-xs font-bold transition-all flex items-center gap-1.5"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            <span>Слайды</span>
+          </button>
+
+          <a
+            href="/Книжка Ильин.pdf"
+            download="Книжка-Ильин.pdf"
+            className="px-3 py-2 rounded-xl bg-orange-600/25 hover:bg-orange-600/35 text-orange-400 text-xs font-bold transition-all flex items-center gap-1.5 border border-orange-500/40"
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Книжка PDF</span>
+          </a>
+
+          <button
+            type="button"
+            onClick={() => setIsContactOpen(true)}
+            className="px-3 py-2 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white text-xs font-bold transition-all shadow-md flex items-center gap-1.5 active:scale-95"
+          >
+            <Phone className="w-3.5 h-3.5" />
+            <span>Визитка</span>
+          </button>
         </div>
       )}
 
@@ -483,15 +573,12 @@ export default function App() {
       {/* Mobile Bottom Sheet Drawer: Instant Slide Thumbnail Picker */}
       {isThumbnailsOpen && (
         <div className="fixed inset-0 z-50 flex flex-col justify-end bg-black/75 backdrop-blur-sm animate-fade-in">
-          {/* Backdrop dismissal */}
           <div 
             className="flex-1 w-full" 
             onClick={() => setIsThumbnailsOpen(false)} 
           />
 
-          {/* Drawer Container */}
           <div className="w-full bg-[#18181b] border-t border-neutral-800 rounded-t-3xl max-h-[85vh] flex flex-col shadow-2xl overflow-hidden pb-[max(1rem,env(safe-area-inset-bottom))]">
-            {/* Grab Handle & Header */}
             <div className="pt-3 pb-2 px-5 flex items-center justify-between border-b border-neutral-800">
               <div className="w-10 h-1 bg-neutral-700 rounded-full mx-auto absolute left-1/2 -translate-x-1/2 top-2.5" />
               <div className="text-sm font-bold text-white pt-1">
@@ -506,7 +593,6 @@ export default function App() {
               </button>
             </div>
 
-            {/* Thumbnail Grid for rapid visual jumping */}
             <div className="p-4 grid grid-cols-2 sm:grid-cols-3 gap-3 overflow-y-auto">
               {SLIDES_DATA.map((slide) => {
                 const isActive = slide.id === currentPage;
@@ -524,7 +610,6 @@ export default function App() {
                         : 'border-neutral-800 bg-neutral-900/80 hover:border-neutral-700'
                     }`}
                   >
-                    {/* Thumbnail Image */}
                     <div className="w-full aspect-[16/9] rounded-lg overflow-hidden bg-black relative">
                       <picture className="w-full h-full">
                         <source srcSet={`/slide-${slide.id}.webp`} type="image/webp" />
@@ -541,7 +626,6 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Title label */}
                     <div className="px-1 truncate">
                       <div className={`text-xs font-semibold truncate ${isActive ? 'text-orange-400' : 'text-neutral-200'}`}>
                         {slide.title}
@@ -555,7 +639,6 @@ export default function App() {
               })}
             </div>
 
-            {/* Quick Contact Banner in Drawer */}
             <div className="p-3 mx-4 mb-2 rounded-2xl bg-neutral-900 border border-neutral-800 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-orange-600/20 text-orange-400 flex items-center justify-center font-bold text-xs">

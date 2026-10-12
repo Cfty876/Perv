@@ -2,20 +2,18 @@ import React, { useState, useRef, useEffect } from 'react';
 import { CHAT_TOPICS, ChatTopic } from '../../data/chatBotData';
 import { 
   Send, 
-  Sparkles, 
   ExternalLink, 
   Copy, 
   Check, 
-  Bot, 
   User, 
-  Layers, 
-  HeartHandshake, 
-  FileText
+  MessageCircle,
+  FileText,
+  UserCheck
 } from 'lucide-react';
 
 interface Message {
   id: string;
-  sender: 'bot' | 'user';
+  sender: 'sasha' | 'user';
   text: string;
   topic?: ChatTopic['response'];
   timestamp: string;
@@ -25,8 +23,8 @@ export const SashaChatBot: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
-      sender: 'bot',
-      text: 'Привет! Я интерактивный ассистент Александра Ильина. Здесь ты можешь узнать всё о Совете Первых города Екатеринбург, наших проектах («ЧаВошка», «Время Перемен»), волонтёрстве, сменах в «Океане» и «Артеке», а также прочитать готовые 5 фактов для отбора на Всемирный Фестиваль Молодёжи 2026! Выбирай тему ниже или напиши свой вопрос.',
+      sender: 'sasha',
+      text: 'Привет! Рад приветствовать тебя на моем конкурсном сайте. Здесь ты можешь узнать все подробности о моей деятельности в Совете Первых Екатеринбурга и Свердловской области, IT-платформах «ЧаВошка» и «Время Перемен», 299.5 часах волонтёрства, сменах в «Океане» и «Артеке», а также прочитать 5 фактов о моём пути. Выбирай интересующую тему ниже или введи свой вопрос!',
       timestamp: 'Только что',
     },
   ]);
@@ -43,7 +41,6 @@ export const SashaChatBot: React.FC = () => {
   }, [messages]);
 
   const handleSelectTopic = (topic: ChatTopic) => {
-    // Add user message
     const userMsg: Message = {
       id: `user-${Date.now()}`,
       sender: 'user',
@@ -51,16 +48,15 @@ export const SashaChatBot: React.FC = () => {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
-    // Add bot response
-    const botMsg: Message = {
-      id: `bot-${Date.now() + 1}`,
-      sender: 'bot',
+    const sashaMsg: Message = {
+      id: `sasha-${Date.now() + 1}`,
+      sender: 'sasha',
       text: topic.response.text,
       topic: topic.response,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
-    setMessages((prev) => [...prev, userMsg, botMsg]);
+    setMessages((prev) => [...prev, userMsg, sashaMsg]);
   };
 
   const handleSendMessage = (e: React.FormEvent) => {
@@ -75,188 +71,189 @@ export const SashaChatBot: React.FC = () => {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
 
-    // Match query to topics
     let matchedTopic: ChatTopic | undefined;
 
-    if (query.includes('вфм') || query.includes('фестивал') || query.includes('5 факт') || query.includes('дипломат') || query.includes('эссе')) {
+    if (query.includes('манифест') || query.includes('факт') || query.includes('дипломат') || query.includes('эссе') || query.includes('вфм')) {
       matchedTopic = CHAT_TOPICS.find((t) => t.id === 'wfm2026');
-    } else if (query.includes('совет') || query.includes('первы') || query.includes('рддм') || query.includes('председател') || query.includes('команд')) {
+    } else if (query.includes('совет') || query.includes('первы') || query.includes('рддм') || query.includes('председател') || query.includes('команд') || query.includes('област')) {
       matchedTopic = CHAT_TOPICS.find((t) => t.id === 'sovet_pervyh');
-    } else if (query.includes('it') || query.includes('айти') || query.includes('сириус') || query.includes('чавошк') || query.includes('кванториум') || query.includes('бот')) {
+    } else if (query.includes('it') || query.includes('айти') || query.includes('сириус') || query.includes('чавошк') || query.includes('кванториум') || query.includes('бот') || query.includes('проект')) {
       matchedTopic = CHAT_TOPICS.find((t) => t.id === 'it_science');
-    } else if (query.includes('добро') || query.includes('волонтер') || query.includes('добровол') || query.includes('час')) {
+    } else if (query.includes('добро') || query.includes('волонтер') || query.includes('добровол') || query.includes('час') || query.includes('книжк')) {
       matchedTopic = CHAT_TOPICS.find((t) => t.id === 'volunteering');
     } else if (query.includes('артек') || query.includes('океан') || query.includes('таватуй') || query.includes('лагер') || query.includes('лидер')) {
       matchedTopic = CHAT_TOPICS.find((t) => t.id === 'camps_leadership');
-    } else if (query.includes('контакт') || query.includes('связ') || query.includes('телефон') || query.includes('телеграм') || query.includes('вк')) {
+    } else if (query.includes('контакт') || query.includes('связ') || query.includes('телефон') || query.includes('телеграм') || query.includes('вк') || query.includes('почт')) {
       matchedTopic = CHAT_TOPICS.find((t) => t.id === 'contacts_all');
     }
 
-    let botMsg: Message;
+    let sashaMsg: Message;
     if (matchedTopic) {
-      botMsg = {
-        id: `bot-${Date.now() + 1}`,
-        sender: 'bot',
+      sashaMsg = {
+        id: `sasha-${Date.now() + 1}`,
+        sender: 'sasha',
         text: matchedTopic.response.text,
         topic: matchedTopic.response,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
     } else {
-      botMsg = {
-        id: `bot-${Date.now() + 1}`,
-        sender: 'bot',
-        text: `Отличный вопрос! Александр Ильин — Председатель Совета Первых Екатеринбурга, ученик 10 класса Гимназии №120. Он убежден, что «Совет Первых — это не один человек, а сильная команда». Выберите одну из основных тем ниже, чтобы получить подробный ответ со всеми ссылками!`,
+      sashaMsg = {
+        id: `sasha-${Date.now() + 1}`,
+        sender: 'sasha',
+        text: `Спасибо за интерес! Я — представитель Совета Первых Екатеринбурга и Свердловской области, ученик 10 класса Гимназии №120. Мой главный принцип: «Совет Первых — это не один человек, а сильная команда». Выберите одну из ключевых тем ниже, чтобы узнать подробности со всеми подтверждающими ссылками!`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
     }
 
-    setMessages((prev) => [...prev, userMsg, botMsg]);
+    setMessages((prev) => [...prev, userMsg, sashaMsg]);
     setInputValue('');
   };
 
   const copyEssay = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
+    navigator.clipboard?.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
   };
 
   return (
-    <div className="w-full max-w-3xl mx-auto flex flex-col h-[78vh] min-h-[540px] max-h-[750px] bg-[#18181b] border border-neutral-800 rounded-3xl shadow-2xl overflow-hidden select-none">
+    <div className="w-full max-w-3xl mx-auto flex flex-col h-[76vh] min-h-[520px] max-h-[720px] bg-[#161619] border border-neutral-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden select-none">
       
-      {/* Bot Header Card */}
-      <div className="p-3.5 sm:p-4 bg-gradient-to-r from-neutral-900 via-neutral-900 to-orange-950/40 border-b border-neutral-800 flex items-center justify-between">
+      {/* Header Bar */}
+      <div className="p-3 sm:p-4 bg-neutral-900 border-b border-neutral-800 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-orange-600 to-amber-500 text-white font-black text-sm flex items-center justify-center shadow-md">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-orange-600 to-amber-500 text-white font-black text-xs sm:text-sm flex items-center justify-center shadow-md">
               АИ
             </div>
-            <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#18181b]" />
+            <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-[#161619]" />
           </div>
 
           <div>
             <div className="flex items-center gap-1.5">
               <h3 className="text-xs sm:text-sm font-bold text-white">
-                Александр Ильин · Чат-бот
+                Александр Ильин
               </h3>
-              <Sparkles className="w-3.5 h-3.5 text-orange-400" />
+              <span className="px-1.5 py-0.5 rounded-md bg-orange-500/15 text-[10px] text-orange-400 font-medium">
+                Онлайн
+              </span>
             </div>
             <p className="text-[10px] text-neutral-400">
-              Председатель Совета Первых Екатеринбурга · Гимназия №120
+              Совет Первых · Гимназия №120 · Екатеринбург
             </p>
           </div>
         </div>
 
         <div className="hidden xs:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-600/15 border border-orange-500/30 text-orange-400 text-[11px] font-semibold">
-          <HeartHandshake className="w-3.5 h-3.5" />
-          <span>Командный игрок</span>
+          <MessageCircle className="w-3.5 h-3.5" />
+          <span>Платформа «ЧаВошка»</span>
         </div>
       </div>
 
-      {/* Messages Stream */}
-      <div className="flex-1 p-3 sm:p-4 overflow-y-auto space-y-3.5 sm:space-y-4">
+      {/* Messages Scroll Area */}
+      <div className="flex-1 p-3 sm:p-4 overflow-y-auto space-y-3.5 bg-[#121214]">
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`flex items-start gap-2.5 ${msg.sender === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
+            className={`flex flex-col ${
+              msg.sender === 'user' ? 'items-end' : 'items-start'
+            }`}
           >
-            {/* Avatar */}
-            <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-xs font-bold ${
-              msg.sender === 'user' 
-                ? 'bg-neutral-800 text-neutral-300' 
-                : 'bg-orange-600 text-white shadow-sm'
-            }`}>
-              {msg.sender === 'user' ? <User className="w-4 h-4" /> : <Bot className="w-4 h-4" />}
-            </div>
-
-            {/* Bubble */}
-            <div className={`max-w-[88%] sm:max-w-[80%] rounded-2xl p-3.5 sm:p-4 text-xs sm:text-sm leading-relaxed ${
-              msg.sender === 'user'
-                ? 'bg-orange-600 text-white rounded-tr-xs shadow-md'
-                : 'bg-neutral-900 border border-neutral-800 text-neutral-200 rounded-tl-xs shadow-md'
-            }`}>
-              {/* Highlight Quote if available */}
-              {msg.topic?.highlightQuote && (
-                <div className="mb-3 p-2.5 rounded-xl bg-orange-950/30 border border-orange-500/40 text-orange-200 text-xs italic font-medium">
-                  {msg.topic.highlightQuote}
+            <div className="flex items-start gap-2 max-w-[92%] sm:max-w-[85%]">
+              {msg.sender === 'sasha' && (
+                <div className="w-6 h-6 rounded-lg bg-orange-600/30 text-orange-400 flex items-center justify-center shrink-0 text-[10px] font-bold mt-1">
+                  АИ
                 </div>
               )}
 
-              {/* Title if present */}
-              {msg.topic?.title && (
-                <div className="font-bold text-white mb-2 text-xs sm:text-sm flex items-center justify-between">
-                  <span>{msg.topic.title}</span>
-                  {msg.id.includes('wfm') || msg.text.includes('ВФМ') || msg.topic.title.includes('ВФМ') ? (
+              <div
+                className={`p-3 sm:p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed shadow-sm ${
+                  msg.sender === 'user'
+                    ? 'bg-orange-600 text-white rounded-br-none'
+                    : 'bg-neutral-850 border border-neutral-800 text-neutral-200 rounded-bl-none'
+                }`}
+              >
+                <p className="whitespace-pre-line">{msg.text}</p>
+
+                {/* Highlight Quote if available */}
+                {msg.topic?.highlightQuote && (
+                  <div className="mt-2.5 p-2.5 rounded-xl bg-orange-950/30 border border-orange-500/30 text-orange-200 text-xs italic">
+                    {msg.topic.highlightQuote}
+                  </div>
+                )}
+
+                {/* Bullets list */}
+                {msg.topic?.bullets && (
+                  <ul className="mt-2.5 space-y-1.5 text-xs text-neutral-300">
+                    {msg.topic.bullets.map((b, bIdx) => (
+                      <li key={bIdx} className="flex items-start gap-1.5">
+                        <span className="text-orange-400 font-bold shrink-0">•</span>
+                        <span>{b}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {/* Links */}
+                {msg.topic?.links && (
+                  <div className="mt-3 pt-2.5 border-t border-neutral-800/80 flex flex-wrap gap-1.5">
+                    {msg.topic.links.map((link, lIdx) => (
+                      <a
+                        key={lIdx}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-2.5 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 border border-neutral-700/80 text-[11px] font-bold text-orange-400 hover:text-orange-300 transition-colors flex items-center gap-1"
+                      >
+                        <span>{link.label}</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    ))}
+                  </div>
+                )}
+
+                {/* Copy Essay Button for WFM 2026 */}
+                {msg.topic?.title.includes('Манифест') && (
+                  <div className="mt-2.5 pt-2 border-t border-neutral-800/80 flex justify-end">
                     <button
                       type="button"
-                      onClick={() => copyEssay(msg.text, msg.id)}
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-neutral-800 hover:bg-neutral-700 text-orange-400 text-[10px] font-semibold transition-colors ml-2"
-                      title="Скопировать эссе для заявки"
+                      onClick={() => copyEssay(msg.topic!.text, msg.id)}
+                      className="px-2.5 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-[11px] font-semibold flex items-center gap-1 transition-colors"
                     >
                       {copiedId === msg.id ? (
                         <>
                           <Check className="w-3 h-3 text-emerald-400" />
-                          <span>Скопировано!</span>
+                          <span className="text-emerald-400 font-bold">Скопировано!</span>
                         </>
                       ) : (
                         <>
                           <Copy className="w-3 h-3" />
-                          <span>Копировать эссе</span>
+                          <span>Скопировать текст</span>
                         </>
                       )}
                     </button>
-                  ) : null}
-                </div>
-              )}
-
-              {/* Message content */}
-              <div className="whitespace-pre-line text-neutral-200">
-                {msg.text}
+                  </div>
+                )}
               </div>
 
-              {/* Bullet list if available */}
-              {msg.topic?.bullets && (
-                <ul className="mt-2.5 space-y-1.5 pl-3 list-disc text-neutral-300 text-xs">
-                  {msg.topic.bullets.map((b, bIdx) => (
-                    <li key={bIdx}>{b}</li>
-                  ))}
-                </ul>
-              )}
-
-              {/* Interactive Links in Bot Message */}
-              {msg.topic?.links && (
-                <div className="mt-3 pt-2.5 border-t border-neutral-800/80 flex flex-wrap gap-2">
-                  {msg.topic.links.map((link, lIdx) => (
-                    <a
-                      key={lIdx}
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-orange-400 hover:text-orange-300 text-xs font-semibold border border-neutral-700/60 transition-transform active:scale-95"
-                    >
-                      <FileText className="w-3.5 h-3.5" />
-                      <span>{link.label}</span>
-                      <ExternalLink className="w-3 h-3 opacity-70" />
-                    </a>
-                  ))}
+              {msg.sender === 'user' && (
+                <div className="w-6 h-6 rounded-lg bg-neutral-800 text-neutral-300 flex items-center justify-center shrink-0 mt-1">
+                  <User className="w-3.5 h-3.5" />
                 </div>
               )}
-
-              {/* Timestamp */}
-              <div className={`text-[10px] mt-2 text-right ${
-                msg.sender === 'user' ? 'text-white/70' : 'text-neutral-400'
-              }`}>
-                {msg.timestamp}
-              </div>
             </div>
+
+            <span className="text-[10px] text-neutral-500 mt-1 px-8">
+              {msg.timestamp}
+            </span>
           </div>
         ))}
+
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Quick FAQ Chips Carousel */}
-      <div className="px-3 py-2 bg-neutral-900/90 border-t border-neutral-800/80 overflow-x-auto no-scrollbar flex items-center gap-1.5">
-        <span className="text-[10px] text-neutral-400 font-bold shrink-0 flex items-center gap-1">
-          <Layers className="w-3 h-3 text-orange-400" />
+      {/* Suggested Quick Topics */}
+      <div className="p-2 sm:p-2.5 bg-neutral-900 border-t border-neutral-800 overflow-x-auto scrollbar-none flex items-center gap-1.5">
+        <span className="text-[10px] text-neutral-500 font-semibold px-1 shrink-0 uppercase tracking-wider">
           Темы:
         </span>
         {CHAT_TOPICS.map((topic) => (
@@ -264,33 +261,32 @@ export const SashaChatBot: React.FC = () => {
             key={topic.id}
             type="button"
             onClick={() => handleSelectTopic(topic)}
-            className="px-2.5 py-1.5 rounded-xl bg-neutral-800/90 hover:bg-neutral-700 border border-neutral-700/60 text-neutral-200 hover:text-white text-xs whitespace-nowrap transition-all active:scale-95 shrink-0 flex items-center gap-1"
+            className="px-2.5 py-1 rounded-lg bg-neutral-850 hover:bg-neutral-800 border border-neutral-750 text-[11px] font-semibold text-neutral-300 hover:text-white transition-all whitespace-nowrap active:scale-95 shrink-0"
           >
-            <span>{topic.label}</span>
+            {topic.label}
           </button>
         ))}
       </div>
 
-      {/* Input Message Bar */}
+      {/* Input Form */}
       <form
         onSubmit={handleSendMessage}
-        className="p-2.5 sm:p-3 bg-neutral-950 border-t border-neutral-800 flex items-center gap-2"
+        className="p-2.5 sm:p-3 bg-[#161619] border-t border-neutral-800 flex items-center gap-2"
       >
         <input
           type="text"
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
-          placeholder="Спроси про Совет Первых, ВФМ 2026, IT-проекты..."
-          className="flex-1 h-11 px-4 rounded-xl bg-neutral-900 border border-neutral-800 focus:border-orange-500 focus:outline-hidden text-xs sm:text-sm text-white placeholder-neutral-500 transition-colors"
+          placeholder="Спросите об опыте, проектах или взглядах..."
+          className="flex-1 bg-neutral-900 border border-neutral-800 rounded-xl px-3.5 py-2 text-xs sm:text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-orange-500 transition-colors"
         />
-
         <button
           type="submit"
           disabled={!inputValue.trim()}
-          className="h-11 px-4 rounded-xl bg-orange-600 hover:bg-orange-500 disabled:opacity-40 disabled:hover:bg-orange-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-transform active:scale-95 shrink-0 shadow-md shadow-orange-950/40"
+          className="p-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 disabled:opacity-30 disabled:hover:bg-orange-600 text-white transition-all active:scale-95 shrink-0"
+          title="Отправить"
         >
           <Send className="w-4 h-4" />
-          <span className="hidden sm:inline">Отправить</span>
         </button>
       </form>
 

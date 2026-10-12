@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CITY_QUESTIONS, CITIES_RESULTS, CityResult } from '../../data/cityQuizData';
-import { RotateCcw, Share2, Compass, CheckCircle2, ArrowRight, Sparkles, MapPin } from 'lucide-react';
+import { RotateCcw, Share2, Compass, CheckCircle2, ArrowRight, MapPin } from 'lucide-react';
 
 interface CityQuizProps {
   onOpenChat?: () => void;
@@ -155,7 +155,7 @@ export const CityQuiz: React.FC<CityQuizProps> = ({ onOpenChat }) => {
             </div>
 
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/30 backdrop-blur-xs text-xs font-bold text-white/90 mb-3">
-              <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+              <Compass className="w-3.5 h-3.5 text-amber-300" />
               Твой результат теста
             </div>
 

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { CAREER_QUESTIONS, CAREER_RESULTS, CareerResult } from '../../data/careerGameData';
 import { 
-  Sparkles, 
   RotateCcw, 
   Share2, 
   CheckCircle2, 
@@ -148,7 +147,7 @@ export const CareerGame: React.FC<CareerGameProps> = ({ onOpenContacts }) => {
 
                   {isSelected && feedbackText && (
                     <div className="text-[11px] text-orange-300 font-bold flex items-center gap-1 mt-1 animate-fade-in">
-                      <Sparkles className="w-3 h-3 text-amber-300" />
+                      <Zap className="w-3 h-3 text-amber-300" />
                       <span>{feedbackText}</span>
                     </div>
                   )}

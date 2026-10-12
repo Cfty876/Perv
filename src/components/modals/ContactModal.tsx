@@ -7,7 +7,7 @@ import {
   Copy, 
   Check, 
   UserPlus, 
-  Sparkles,
+  CheckCircle2,
   Share2
 } from 'lucide-react';
 
@@ -100,7 +100,7 @@ END:VCARD`;
                 <h3 className="text-lg font-black tracking-tight text-white truncate">
                   {contacts.name}
                 </h3>
-                <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-amber-300 shrink-0" />
               </div>
               <p className="text-xs text-orange-100 font-medium truncate mt-0.5">
                 {contacts.role}

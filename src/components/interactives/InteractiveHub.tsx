@@ -4,9 +4,8 @@ import { SashaChatBot } from './SashaChatBot';
 import { CareerGame } from './CareerGame';
 import { 
   Compass, 
-  MessageSquareCode, 
+  MessageCircle, 
   Gamepad2, 
-  Sparkles,
   ChevronRight
 } from 'lucide-react';
 
@@ -48,8 +47,8 @@ export const InteractiveHub: React.FC<InteractiveHubProps> = ({ onOpenContacts }
                 : 'text-neutral-400 hover:text-white hover:bg-neutral-850'
             }`}
           >
-            <MessageSquareCode className="w-4 h-4 shrink-0" />
-            <span className="truncate">Чат-бот Саши</span>
+            <MessageCircle className="w-4 h-4 shrink-0" />
+            <span className="truncate">ЧаВошка</span>
           </button>
 
           {/* Tab 3: Career Game */}
