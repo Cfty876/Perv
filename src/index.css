@@ -52,11 +52,46 @@
   background: rgba(249, 115, 22, 0.4);
 }
 
+/* Smooth keynote slide transition animations */
+@keyframes slideNext {
+  0% {
+    opacity: 0;
+    transform: translateX(42px) scale(0.975);
+    filter: blur(3px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes slidePrev {
+  0% {
+    opacity: 0;
+    transform: translateX(-42px) scale(0.975);
+    filter: blur(3px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.animate-slide-next {
+  animation: slideNext 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-prev {
+  animation: slidePrev 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* Smooth fade-in animation */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -65,7 +100,7 @@
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Print styles for export or jury evaluation */

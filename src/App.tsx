@@ -26,8 +26,35 @@ export default function App() {
   const [activeMainSection, setActiveMainSection] = useState<'slides' | 'portfolio' | 'interactive'>('slides');
 
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [slideDirection, setSlideDirection] = useState<'next' | 'prev' | 'none'>('next');
   const [isThumbnailsOpen, setIsThumbnailsOpen] = useState<boolean>(false);
   const [isContactOpen, setIsContactOpen] = useState<boolean>(false);
+
+  // Header Sliding Pill State
+  const [headerPillStyle, setHeaderPillStyle] = useState<{ left: number; width: number }>({ left: 4, width: 84 });
+  const slidesBtnRef = useRef<HTMLButtonElement | null>(null);
+  const portfolioBtnRef = useRef<HTMLButtonElement | null>(null);
+  const interactiveBtnRef = useRef<HTMLButtonElement | null>(null);
+
+  const updateHeaderPill = useCallback(() => {
+    let target: HTMLButtonElement | null = null;
+    if (activeMainSection === 'slides') target = slidesBtnRef.current;
+    else if (activeMainSection === 'portfolio') target = portfolioBtnRef.current;
+    else if (activeMainSection === 'interactive') target = interactiveBtnRef.current;
+
+    if (target) {
+      setHeaderPillStyle({
+        left: target.offsetLeft,
+        width: target.offsetWidth,
+      });
+    }
+  }, [activeMainSection]);
+
+  useEffect(() => {
+    updateHeaderPill();
+    window.addEventListener('resize', updateHeaderPill);
+    return () => window.removeEventListener('resize', updateHeaderPill);
+  }, [updateHeaderPill]);
   
   // Mobile Zoom & Pan State (Natural gestures: double-tap & pinch)
   const [zoomLevel, setZoomLevel] = useState<number>(1);
@@ -80,25 +107,26 @@ export default function App() {
     return () => window.removeEventListener('hashchange', handleHash);
   }, []);
 
-  const scrollToPage = useCallback((page: number) => {
+  const scrollToPage = useCallback((page: number, customDir?: 'next' | 'prev') => {
     const clamped = Math.max(1, Math.min(page, SLIDES_DATA.length));
+    setSlideDirection(customDir || (clamped >= currentPage ? 'next' : 'prev'));
     setCurrentPage(clamped);
     setActiveMainSection('slides');
     window.location.hash = `page-${clamped}`;
     // Reset zoom when switching pages
     setZoomLevel(1);
     setPanOffset({ x: 0, y: 0 });
-  }, []);
+  }, [currentPage]);
 
   const nextPage = useCallback(() => {
     if (currentPage < SLIDES_DATA.length) {
-      scrollToPage(currentPage + 1);
+      scrollToPage(currentPage + 1, 'next');
     }
   }, [currentPage, scrollToPage]);
 
   const prevPage = useCallback(() => {
     if (currentPage > 1) {
-      scrollToPage(currentPage - 1);
+      scrollToPage(currentPage - 1, 'prev');
     }
   }, [currentPage, scrollToPage]);
 
@@ -278,11 +306,11 @@ export default function App() {
         <SplashScreen onFinish={() => setShowSplash(false)} />
       )}
 
-      {/* Top Header: Official Logos of Движение Первых and Ученик Года */}
+      {/* Top Header: Official Logos and Smooth Sliding Segmented Control */}
       <header className="sticky top-0 z-40 w-full px-2.5 sm:px-4 py-2 bg-[#121214]/90 backdrop-blur-md border-b border-neutral-800/80 flex items-center justify-between">
         
-        {/* Left: Official Logos (Первые.svg and года.svg) & Section Switcher */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 overflow-x-auto scrollbar-none py-0.5">
+        {/* Left: Official Logos and Gliding Pill Switcher */}
+        <div className="flex items-center gap-2 sm:gap-3 overflow-x-auto scrollbar-none py-0.5">
           
           {/* Logo Container */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
@@ -295,7 +323,7 @@ export default function App() {
               />
             </div>
 
-            {/* 2. Official logo of the contest «Ученик года» (года.svg) in orange without substrate */}
+            {/* 2. Official logo of the contest «Ученик года» in orange without substrate */}
             <div 
               className="flex items-center justify-center shrink-0" 
               title="Всероссийский конкурс «Ученик года»"
@@ -308,50 +336,65 @@ export default function App() {
             </div>
           </div>
 
-          {/* Section Switcher: Слайды / Достижения / Интерактивы */}
-          <div className="flex items-center gap-1 p-0.5 rounded-xl bg-neutral-900 border border-neutral-800 shrink-0">
+          {/* Section Switcher: Fluid Sliding Pill (Слайды / Достижения / Интерактивы) */}
+          <div className="relative flex items-center p-1 rounded-2xl bg-[#141416] border border-neutral-800/90 shadow-inner shrink-0 overflow-hidden">
+            
+            {/* Liquid Gliding Active Highlight Block with Ultra-Smooth Curve */}
+            <div 
+              className="absolute top-1 bottom-1 rounded-xl bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 shadow-[0_2px_16px_rgba(234,88,12,0.45)] transition-all duration-450 ease-[cubic-bezier(0.22,1,0.36,1)] pointer-events-none"
+              style={{
+                left: `${headerPillStyle.left}px`,
+                width: `${headerPillStyle.width}px`,
+              }}
+            >
+              <div className="absolute inset-0 rounded-xl bg-white/10 opacity-60 pointer-events-none" />
+            </div>
+
             <button
+              ref={slidesBtnRef}
               type="button"
               onClick={() => {
                 setActiveMainSection('slides');
                 window.location.hash = `page-${currentPage}`;
               }}
-              className={`px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 sm:gap-1.5 ${
+              className={`relative z-10 px-2.5 sm:px-3 py-1 rounded-xl text-xs font-bold transition-colors duration-300 ease-out flex items-center gap-1.5 ${
                 activeMainSection === 'slides'
-                  ? 'bg-neutral-800 text-white shadow-xs'
+                  ? 'text-white'
                   : 'text-neutral-400 hover:text-white'
               }`}
             >
-              <Presentation className="w-3.5 h-3.5 text-orange-400" />
+              <Presentation className="w-3.5 h-3.5" />
               <span>Слайды</span>
             </button>
 
             <button
+              ref={portfolioBtnRef}
               type="button"
               onClick={() => {
                 setActiveMainSection('portfolio');
                 window.location.hash = 'portfolio';
               }}
-              className={`px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 sm:gap-1.5 ${
+              className={`relative z-10 px-2.5 sm:px-3 py-1 rounded-xl text-xs font-bold transition-colors duration-300 ease-out flex items-center gap-1.5 ${
                 activeMainSection === 'portfolio'
-                  ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-xs'
+                  ? 'text-white'
                   : 'text-neutral-400 hover:text-white'
               }`}
             >
-              <Award className="w-3.5 h-3.5 text-amber-300" />
+              <Award className="w-3.5 h-3.5 text-amber-200" />
               <span>Достижения</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-300 animate-pulse" />
             </button>
 
             <button
+              ref={interactiveBtnRef}
               type="button"
               onClick={() => {
                 setActiveMainSection('interactive');
                 window.location.hash = 'interactives';
               }}
-              className={`px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 sm:gap-1.5 relative ${
+              className={`relative z-10 px-2.5 sm:px-3 py-1 rounded-xl text-xs font-bold transition-colors duration-300 ease-out flex items-center gap-1.5 ${
                 activeMainSection === 'interactive'
-                  ? 'bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-xs'
+                  ? 'text-white'
                   : 'text-neutral-400 hover:text-white'
               }`}
             >
@@ -399,7 +442,7 @@ export default function App() {
             <InteractiveHub onOpenContacts={() => setIsContactOpen(true)} />
           </div>
         ) : (
-          /* Minimalist Single Slide Presentation */
+          /* Minimalist Single Slide Presentation with Continuous Carousel (Zero Black Screen) */
           <div className="w-full max-w-5xl flex flex-col items-center">
             
             {/* Slide Frame with Smooth Touch Gesture Support */}
@@ -411,13 +454,32 @@ export default function App() {
               onClick={handleDoubleTap}
               className="relative w-full aspect-[16/9] rounded-2xl shadow-2xl overflow-hidden bg-black border border-neutral-800/90 touch-none flex items-center justify-center cursor-grab active:cursor-grabbing"
             >
+              {/* Zoom & Pan Wrapper */}
               <div 
-                className="w-full h-full transition-transform duration-150 ease-out origin-center flex items-center justify-center will-change-transform"
+                className="w-full h-full origin-center will-change-transform transition-transform duration-200 ease-out"
                 style={{
                   transform: `scale(${zoomLevel}) translate(${panOffset.x / zoomLevel}px, ${panOffset.y / zoomLevel}px)`,
                 }}
               >
-                <SlideRenderer slideId={currentPage} isPriority={true} />
+                {/* Continuous Sliding Filmstrip Track - ZERO black screen, permanently smooth */}
+                <div 
+                  className="w-full h-full flex transition-transform duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] will-change-transform"
+                  style={{
+                    transform: `translateX(-${(currentPage - 1) * 100}%)`,
+                  }}
+                >
+                  {SLIDES_DATA.map((slide) => (
+                    <div 
+                      key={slide.id} 
+                      className="w-full h-full shrink-0 flex items-center justify-center relative select-none"
+                    >
+                      <SlideRenderer 
+                        slideId={slide.id} 
+                        isPriority={slide.id === currentPage || Math.abs(slide.id - currentPage) <= 1} 
+                      />
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {zoomLevel > 1 && (
@@ -455,21 +517,24 @@ export default function App() {
               )}
             </div>
 
-            {/* Clean Minimalist Slide Dots Indicator */}
+            {/* Clean Minimalist Slide Dots Indicator with smooth active expansion */}
             <div className="flex items-center gap-2 mt-3 sm:mt-4 py-1.5 px-3 rounded-full bg-neutral-900/60 border border-neutral-800/80">
-              {SLIDES_DATA.map((slide) => (
-                <button
-                  key={slide.id}
-                  type="button"
-                  onClick={() => scrollToPage(slide.id)}
-                  aria-label={`Перейти к слайду ${slide.id}`}
-                  className={`h-1.5 rounded-full transition-all ${
-                    slide.id === currentPage 
-                      ? 'w-6 bg-orange-500' 
-                      : 'w-1.5 bg-neutral-700 hover:bg-neutral-600'
-                  }`}
-                />
-              ))}
+              {SLIDES_DATA.map((slide) => {
+                const isActive = slide.id === currentPage;
+                return (
+                  <button
+                    key={slide.id}
+                    type="button"
+                    onClick={() => scrollToPage(slide.id)}
+                    aria-label={`Перейти к слайду ${slide.id}`}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      isActive 
+                        ? 'w-7 bg-gradient-to-r from-orange-500 to-amber-500 shadow-sm shadow-orange-500/50' 
+                        : 'w-1.5 bg-neutral-700 hover:bg-neutral-600'
+                    }`}
+                  />
+                );
+              })}
             </div>
 
           </div>

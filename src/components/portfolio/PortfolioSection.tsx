@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { 
   VOLUNTEER_STATS, 
   VOLUNTEER_RECORDS, 
@@ -40,6 +40,26 @@ export const PortfolioSection: React.FC<PortfolioSectionProps> = ({ onOpenContac
   const [searchQuery, setSearchQuery] = useState('');
   const [volunteerCategory, setVolunteerCategory] = useState<string>('all');
   const [copiedLink, setCopiedLink] = useState(false);
+
+  // Animated sliding pill for portfolio tabs
+  const [tabPillStyle, setTabPillStyle] = useState<{ left: number; width: number }>({ left: 4, width: 110 });
+  const tabRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+
+  const updateTabPill = useCallback(() => {
+    const el = tabRefs.current[activeTab];
+    if (el) {
+      setTabPillStyle({
+        left: el.offsetLeft,
+        width: el.offsetWidth,
+      });
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    updateTabPill();
+    window.addEventListener('resize', updateTabPill);
+    return () => window.removeEventListener('resize', updateTabPill);
+  }, [updateTabPill]);
 
   // Filter volunteer records
   const filteredVolunteerRecords = useMemo(() => {
@@ -217,15 +237,25 @@ export const PortfolioSection: React.FC<PortfolioSectionProps> = ({ onOpenContac
         </div>
       </div>
 
-      {/* Main Tabs Navigation (Touch swipe friendly) */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
+      {/* Main Tabs Navigation with Fluid Gliding Pill */}
+      <div className="relative flex items-center p-1 rounded-2xl bg-[#141416] border border-neutral-800/90 overflow-x-auto scrollbar-none shadow-inner">
+        {/* Animated Gliding Pill with Ultra-Smooth Apple-like Easing */}
+        <div 
+          className="absolute top-1 bottom-1 rounded-xl bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 shadow-[0_2px_16px_rgba(234,88,12,0.45)] transition-all duration-450 ease-[cubic-bezier(0.22,1,0.36,1)] pointer-events-none"
+          style={{
+            left: `${tabPillStyle.left}px`,
+            width: `${tabPillStyle.width}px`,
+          }}
+        >
+          <div className="absolute inset-0 rounded-xl bg-white/10 opacity-50" />
+        </div>
+
         <button
+          ref={(el) => { tabRefs.current['all'] = el; }}
           type="button"
           onClick={() => setActiveTab('all')}
-          className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
-            activeTab === 'all'
-              ? 'bg-orange-600 text-white shadow-md'
-              : 'bg-neutral-900 text-neutral-400 hover:text-white border border-neutral-800'
+          className={`relative z-10 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors duration-200 flex items-center gap-1.5 shrink-0 ${
+            activeTab === 'all' ? 'text-white' : 'text-neutral-400 hover:text-white'
           }`}
         >
           <Layers className="w-3.5 h-3.5" />
@@ -233,12 +263,11 @@ export const PortfolioSection: React.FC<PortfolioSectionProps> = ({ onOpenContac
         </button>
 
         <button
+          ref={(el) => { tabRefs.current['volunteer'] = el; }}
           type="button"
           onClick={() => setActiveTab('volunteer')}
-          className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
-            activeTab === 'volunteer'
-              ? 'bg-orange-600 text-white shadow-md'
-              : 'bg-neutral-900 text-neutral-400 hover:text-white border border-neutral-800'
+          className={`relative z-10 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors duration-200 flex items-center gap-1.5 shrink-0 ${
+            activeTab === 'volunteer' ? 'text-white' : 'text-neutral-400 hover:text-white'
           }`}
         >
           <Heart className="w-3.5 h-3.5" />
@@ -246,12 +275,11 @@ export const PortfolioSection: React.FC<PortfolioSectionProps> = ({ onOpenContac
         </button>
 
         <button
+          ref={(el) => { tabRefs.current['achievements'] = el; }}
           type="button"
           onClick={() => setActiveTab('achievements')}
-          className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
-            activeTab === 'achievements'
-              ? 'bg-orange-600 text-white shadow-md'
-              : 'bg-neutral-900 text-neutral-400 hover:text-white border border-neutral-800'
+          className={`relative z-10 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors duration-200 flex items-center gap-1.5 shrink-0 ${
+            activeTab === 'achievements' ? 'text-white' : 'text-neutral-400 hover:text-white'
           }`}
         >
           <Trophy className="w-3.5 h-3.5" />
@@ -259,12 +287,11 @@ export const PortfolioSection: React.FC<PortfolioSectionProps> = ({ onOpenContac
         </button>
 
         <button
+          ref={(el) => { tabRefs.current['science'] = el; }}
           type="button"
           onClick={() => setActiveTab('science')}
-          className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
-            activeTab === 'science'
-              ? 'bg-orange-600 text-white shadow-md'
-              : 'bg-neutral-900 text-neutral-400 hover:text-white border border-neutral-800'
+          className={`relative z-10 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors duration-200 flex items-center gap-1.5 shrink-0 ${
+            activeTab === 'science' ? 'text-white' : 'text-neutral-400 hover:text-white'
           }`}
         >
           <Code className="w-3.5 h-3.5" />
@@ -272,12 +299,11 @@ export const PortfolioSection: React.FC<PortfolioSectionProps> = ({ onOpenContac
         </button>
 
         <button
+          ref={(el) => { tabRefs.current['bio'] = el; }}
           type="button"
           onClick={() => setActiveTab('bio')}
-          className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 shrink-0 ${
-            activeTab === 'bio'
-              ? 'bg-orange-600 text-white shadow-md'
-              : 'bg-neutral-900 text-neutral-400 hover:text-white border border-neutral-800'
+          className={`relative z-10 px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors duration-200 flex items-center gap-1.5 shrink-0 ${
+            activeTab === 'bio' ? 'text-white' : 'text-neutral-400 hover:text-white'
           }`}
         >
           <BookOpen className="w-3.5 h-3.5" />
